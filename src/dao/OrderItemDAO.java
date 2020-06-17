@@ -1,0 +1,179 @@
+package dao;
+
+import bean.Order;
+import bean.OrderItem;
+import bean.Product;
+import util.DBUtil;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class OrderItemDAO {
+    public int getTotal() {
+        int total = 0;
+        try (Connection c = DBUtil.getConnection();
+             Statement s = c.createStatement()) {
+            String sql = "select count(*) from OrderItem";
+            ResultSet rs = s.executeQuery(sql);
+            while (rs.next()) {
+                total = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return total;
+    }
+
+    public void add(OrderItem bean) {
+        String sql = "insert into OrderItem values(null,?,?,?,?)";
+        try (Connection c = DBUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, bean.getProduct().getId());
+            ps.setInt(2, bean.getOrder().getId());
+            ps.setInt(3, bean.getUser().getId());
+            ps.setInt(4, bean.getNumber());
+            ps.execute();
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                int id = rs.getInt(1);
+                bean.setId(id);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void update(OrderItem bean) {
+        String sql = "update OrderItem set pid=?, oid=?, uid=?, number=? where id=?";
+        try (Connection c = DBUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, bean.getProduct().getId());
+            ps.setInt(2, bean.getOrder().getId());
+            ps.setInt(3, bean.getUser().getId());
+            ps.setInt(4, bean.getNumber());
+            ps.setInt(5, bean.getId());
+            ps.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void delete(int id) {
+        try (Connection c = DBUtil.getConnection();
+             Statement s = c.createStatement()) {
+            String sql = "delete from OrderItem where id=" + id;
+            s.execute(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public OrderItem get(int id) {
+        OrderItem bean = null;
+        try (Connection c = DBUtil.getConnection();
+             Statement s = c.createStatement()) {
+            String sql = "select * from OrderItem where id=" + id;
+            ResultSet rs = s.executeQuery(sql);
+            if (rs.next()) {
+                bean = new OrderItem();
+                bean.setProduct(new ProductDAO().get(rs.getInt(2)));
+                bean.setOrder(new OrderDAO().get(rs.getInt(3)));
+                bean.setUser(new UserDAO().get(rs.getInt(4)));
+                bean.setNumber(rs.getInt(5));
+                bean.setId(id);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return bean;
+    }
+
+    public int getSaleCount(int pid) {
+        int total = 0;
+        try (Connection c = DBUtil.getConnection();
+             Statement s = c.createStatement()) {
+            String sql = "select sum(number) from OrderItem where pid =" + pid;
+            ResultSet rs = s.executeQuery(sql);
+            while (rs.next()) {
+                total = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return total;
+    }
+
+    public List<OrderItem> listByOrder(int oid) {
+        List<OrderItem> beans = new ArrayList<>();
+        String sql = "select * from OrderItem where oid=? order by id desc";
+        try (Connection c = DBUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, oid);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                OrderItem bean = new OrderItem();
+                bean.setProduct(new ProductDAO().get(rs.getInt(2)));
+                bean.setOrder(new OrderDAO().get(oid));
+                bean.setUser(new UserDAO().get(rs.getInt(4)));
+                bean.setNumber(rs.getInt(5));
+                bean.setId(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return beans;
+    }
+
+    public List<OrderItem> listByUser(int uid, int start, int count) {
+        List<OrderItem> beans = new ArrayList<>();
+        String sql = "select * from OrderItem where uid=? and oid=-1 order by id desc limit ?,?";
+        try (Connection c = DBUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, uid);
+            ps.setInt(2, start);
+            ps.setInt(3, count);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                OrderItem bean = new OrderItem();
+                bean.setProduct(new ProductDAO().get(rs.getInt(2)));
+                bean.setOrder(new OrderDAO().get(rs.getInt(3)));
+                bean.setUser(new UserDAO().get(uid));
+                bean.setNumber(rs.getInt(5));
+                bean.setId(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return beans;
+    }
+
+    public List<OrderItem> listByUser(int uid) {
+        return listByUser(uid, 0, Short.MAX_VALUE);
+    }
+
+    public void fill(List<Order> os) {
+        for (Order o : os) {
+            List<OrderItem> ois = listByOrder(o.getId());
+            float total = 0;
+            int totalNumber = 0;
+            for (OrderItem oi : ois) {
+                total += oi.getNumber() * oi.getProduct().getPromotePrice();
+                totalNumber += oi.getNumber();
+            }
+            o.setTotal(total);
+            o.setOrderItems(ois);
+            o.setTotalNumber(totalNumber);
+        }
+    }
+
+    public void fill(Order o) {
+        List<OrderItem> ois = listByOrder(o.getId());
+        float total = 0;
+        for (OrderItem oi : ois) {
+            total += oi.getNumber() * oi.getProduct().getPromotePrice();
+        }
+        o.setTotal(total);
+        o.setOrderItems(ois);
+    }
+}

@@ -11,6 +11,7 @@ import java.util.List;
 public class ProductImageDAO {
     public static final String type_single="type_single";
     public static final String type_detail ="type_detail";
+
     public int getTotal() {
         int total = 0;
         try (Connection c = DBUtil.getConnection();

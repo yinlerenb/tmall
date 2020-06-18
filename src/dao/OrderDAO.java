@@ -1,12 +1,14 @@
 package dao;
 
 import bean.Order;
+import bean.User;
 import util.DBUtil;
 import util.DateUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 public class OrderDAO {
     public static final String waitPay = "waitPay";
@@ -153,4 +155,61 @@ public class OrderDAO {
     public List<Order> list() {
         return list(0, Short.MAX_VALUE);
     }
+
+    public List<Order> list(int uid, String excludedStatus) {
+        return list(uid, excludedStatus, 0, Short.MAX_VALUE);
+    }
+
+    public List<Order> list(int uid, String excludedStatus, int start, int count) {
+        List<Order> beans = new ArrayList<Order>();
+
+        String sql = "select * from Order_ where uid = ? and status != ? order by id desc limit ?,? ";
+
+        try (Connection c = DBUtil.getConnection(); PreparedStatement ps = c.prepareStatement(sql);) {
+
+            ps.setInt(1, uid);
+            ps.setString(2, excludedStatus);
+            ps.setInt(3, start);
+            ps.setInt(4, count);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Order bean = new Order();
+                String orderCode = rs.getString("orderCode");
+                String address = rs.getString("address");
+                String post = rs.getString("post");
+                String receiver = rs.getString("receiver");
+                String mobile = rs.getString("mobile");
+                String userMessage = rs.getString("userMessage");
+                String status = rs.getString("status");
+                Date createDate = DateUtil.t2d(rs.getTimestamp("createDate"));
+                Date payDate = DateUtil.t2d(rs.getTimestamp("payDate"));
+                Date deliveryDate = DateUtil.t2d(rs.getTimestamp("deliveryDate"));
+                Date confirmDate = DateUtil.t2d(rs.getTimestamp("confirmDate"));
+
+                int id = rs.getInt("id");
+                bean.setId(id);
+                bean.setOrderCode(orderCode);
+                bean.setAddress(address);
+                bean.setPost(post);
+                bean.setReceiver(receiver);
+                bean.setMobile(mobile);
+                bean.setUserMessage(userMessage);
+                bean.setCreateDate(createDate);
+                bean.setPayDate(payDate);
+                bean.setDeliveryDate(deliveryDate);
+                bean.setConfirmDate(confirmDate);
+                User user = new UserDAO().get(uid);
+                bean.setStatus(status);
+                bean.setUser(user);
+                beans.add(bean);
+            }
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+        return beans;
+    }
+
 }

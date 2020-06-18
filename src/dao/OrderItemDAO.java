@@ -3,6 +3,7 @@ package dao;
 import bean.Order;
 import bean.OrderItem;
 import bean.Product;
+import bean.User;
 import util.DBUtil;
 
 import java.sql.*;
@@ -105,21 +106,48 @@ public class OrderItemDAO {
     }
 
     public List<OrderItem> listByOrder(int oid) {
-        List<OrderItem> beans = new ArrayList<>();
-        String sql = "select * from OrderItem where oid=? order by id desc";
+        return listByOrder(oid, 0, Short.MAX_VALUE);
+    }
+
+    public List<OrderItem> listByOrder(int oid, int start, int count) {
+        List<OrderItem> beans = new ArrayList<OrderItem>();
+
+        String sql = "select * from OrderItem where oid = ? order by id desc limit ?,? ";
+
         try (Connection c = DBUtil.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
+
             ps.setInt(1, oid);
+            ps.setInt(2, start);
+            ps.setInt(3, count);
+
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
                 OrderItem bean = new OrderItem();
-                bean.setProduct(new ProductDAO().get(rs.getInt(2)));
-                bean.setOrder(new OrderDAO().get(oid));
-                bean.setUser(new UserDAO().get(rs.getInt(4)));
-                bean.setNumber(rs.getInt(5));
-                bean.setId(rs.getInt(1));
+                int id = rs.getInt(1);
+
+                int pid = rs.getInt("pid");
+                int uid = rs.getInt("uid");
+                int number = rs.getInt("number");
+
+
+                Product product = new ProductDAO().get(pid);
+                if(-1!=oid){
+                    Order order= new OrderDAO().get(oid);
+                    bean.setOrder(order);
+                }
+
+                User user = new UserDAO().get(uid);
+                bean.setProduct(product);
+
+                bean.setUser(user);
+                bean.setNumber(number);
+                bean.setId(id);
+                beans.add(bean);
             }
         } catch (SQLException e) {
+
             e.printStackTrace();
         }
         return beans;
@@ -175,5 +203,52 @@ public class OrderItemDAO {
         }
         o.setTotal(total);
         o.setOrderItems(ois);
+    }
+
+    public List<OrderItem> listByProduct(int pid) {
+        return listByProduct(pid, 0, Short.MAX_VALUE);
+    }
+
+    public List<OrderItem> listByProduct(int pid, int start, int count) {
+        List<OrderItem> beans = new ArrayList<OrderItem>();
+
+        String sql = "select * from OrderItem where pid = ? order by id desc limit ?,? ";
+
+        try (Connection c = DBUtil.getConnection(); PreparedStatement ps = c.prepareStatement(sql);) {
+
+            ps.setInt(1, pid);
+            ps.setInt(2, start);
+            ps.setInt(3, count);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                OrderItem bean = new OrderItem();
+                int id = rs.getInt(1);
+
+                int uid = rs.getInt("uid");
+                int oid = rs.getInt("oid");
+                int number = rs.getInt("number");
+
+
+                Product product = new ProductDAO().get(pid);
+                if(-1!=oid){
+                    Order order= new OrderDAO().get(oid);
+                    bean.setOrder(order);
+                }
+
+                User user = new UserDAO().get(uid);
+                bean.setProduct(product);
+
+                bean.setUser(user);
+                bean.setNumber(number);
+                bean.setId(id);
+                beans.add(bean);
+            }
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+        return beans;
     }
 }

@@ -29,8 +29,8 @@ public class PropertyValueDAO {
         String sql = "insert into PropertyValue values(null,?,?,?)";
         try (Connection c = DBUtil.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1,bean.getProduct().getId());
-            ps.setInt(2,bean.getProperty().getId());
+            ps.setInt(1, bean.getProduct().getId());
+            ps.setInt(2, bean.getProperty().getId());
             ps.setString(3, bean.getValue());
             ps.execute();
             ResultSet rs = ps.getGeneratedKeys();
@@ -47,8 +47,8 @@ public class PropertyValueDAO {
         String sql = "update PropertyValue set pid=?,ptid=?,value=? where id=?";
         try (Connection c = DBUtil.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1,bean.getProduct().getId());
-            ps.setInt(2,bean.getProperty().getId());
+            ps.setInt(1, bean.getProduct().getId());
+            ps.setInt(2, bean.getProperty().getId());
             ps.setString(1, bean.getValue());
             ps.setInt(4, bean.getId());
             ps.execute();
@@ -56,6 +56,7 @@ public class PropertyValueDAO {
             e.printStackTrace();
         }
     }
+
     public void delete(int id) {
         try (Connection c = DBUtil.getConnection();
              Statement s = c.createStatement()) {
@@ -65,19 +66,20 @@ public class PropertyValueDAO {
             e.printStackTrace();
         }
     }
-    public PropertyValue get(int id){
-        PropertyValue bean =null;
+
+    public PropertyValue get(int id) {
+        PropertyValue bean = null;
         try (Connection c = DBUtil.getConnection();
-             Statement s=c.createStatement()) {
-            String sql="select * from PropertyValue where id="+id;
-            ResultSet rs=s.executeQuery(sql);
-            if (rs.next()){
-                bean=new PropertyValue();
-                int pid=rs.getInt("pid");
-                int ptid=rs.getInt("ptid");
-                String value=rs.getString("value");
-                Product product=new ProductDAO().get(pid);
-                Property property=new PropertyDAO().get(ptid);
+             Statement s = c.createStatement()) {
+            String sql = "select * from PropertyValue where id=" + id;
+            ResultSet rs = s.executeQuery(sql);
+            if (rs.next()) {
+                bean = new PropertyValue();
+                int pid = rs.getInt("pid");
+                int ptid = rs.getInt("ptid");
+                String value = rs.getString("value");
+                Product product = new ProductDAO().get(pid);
+                Property property = new PropertyDAO().get(ptid);
                 bean.setProduct(product);
                 bean.setProperty(property);
                 bean.setValue(value);
@@ -89,18 +91,18 @@ public class PropertyValueDAO {
         return bean;
     }
 
-    public PropertyValue get(int pid, int ptid){
-        PropertyValue bean =null;
+    public PropertyValue get(int pid, int ptid) {
+        PropertyValue bean = null;
         try (Connection c = DBUtil.getConnection();
-             Statement s=c.createStatement()) {
-            String sql="select * from PropertyValue where ptid = " + ptid + " and pid = " + pid;
-            ResultSet rs=s.executeQuery(sql);
-            if (rs.next()){
-                bean=new PropertyValue();
-                int id=rs.getInt("id");
-                String value=rs.getString("value");
-                Product product=new ProductDAO().get(pid);
-                Property property=new PropertyDAO().get(ptid);
+             Statement s = c.createStatement()) {
+            String sql = "select * from PropertyValue where ptid = " + ptid + " and pid = " + pid;
+            ResultSet rs = s.executeQuery(sql);
+            if (rs.next()) {
+                bean = new PropertyValue();
+                int id = rs.getInt("id");
+                String value = rs.getString("value");
+                Product product = new ProductDAO().get(pid);
+                Property property = new PropertyDAO().get(ptid);
                 bean.setProduct(product);
                 bean.setProperty(property);
                 bean.setValue(value);
@@ -112,20 +114,20 @@ public class PropertyValueDAO {
         return bean;
     }
 
-    public List<PropertyValue> list(int start, int count){
-        List<PropertyValue> beans=new ArrayList<>();
-        String sql="select * from PropertyValue order by id desc limit ?,?";
+    public List<PropertyValue> list(int start, int count) {
+        List<PropertyValue> beans = new ArrayList<>();
+        String sql = "select * from PropertyValue order by id desc limit ?,?";
         try (Connection c = DBUtil.getConnection();
-             PreparedStatement ps=c.prepareStatement(sql)) {
-            ps.setInt(1,start);
-            ps.setInt(2,count);
-            ResultSet rs=ps.executeQuery();
-            while (rs.next()){
-                PropertyValue bean=new PropertyValue();
-                int pid=rs.getInt("pid");
-                int ptid=rs.getInt("ptid");
-                Product product=new ProductDAO().get(pid);
-                Property property=new PropertyDAO().get(ptid);
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, start);
+            ps.setInt(2, count);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                PropertyValue bean = new PropertyValue();
+                int pid = rs.getInt("pid");
+                int ptid = rs.getInt("ptid");
+                Product product = new ProductDAO().get(pid);
+                Property property = new PropertyDAO().get(ptid);
                 bean.setId(rs.getInt("id"));
                 bean.setProperty(property);
                 bean.setProduct(product);
@@ -137,34 +139,35 @@ public class PropertyValueDAO {
         return beans;
     }
 
-    public List<PropertyValue> list(){
-        return list(0,Integer.MAX_VALUE);
+    public List<PropertyValue> list() {
+        return list(0, Integer.MAX_VALUE);
     }
 
-    public void init(Product p){
-        List<Property> pts= new PropertyDAO().list(p.getCategory().getId());
+    public void init(Product p) {
+        List<Property> pts = new PropertyDAO().list(p.getCategory().getId());
         for (Property pt : pts) {
-            PropertyValue pv=get(pt.getId(),p.getId());
+            PropertyValue pv = get(pt.getId(), p.getId());
             if (null == pv) {
-                pv=new PropertyValue();
+                pv = new PropertyValue();
                 pv.setProduct(p);
                 pv.setProperty(pt);
                 this.add(pv);
             }
         }
     }
-    public List<PropertyValue> list(int pid){
-        List<PropertyValue> beans=new ArrayList<>();
-        String sql="select * from PropertyValue where pid=? order by id desc";
+
+    public List<PropertyValue> list(int pid) {
+        List<PropertyValue> beans = new ArrayList<>();
+        String sql = "select * from PropertyValue where pid=? order by id desc";
         try (Connection c = DBUtil.getConnection();
-             PreparedStatement ps=c.prepareStatement(sql)) {
-            ps.setInt(1,pid);
-            ResultSet rs=ps.executeQuery();
-            while (rs.next()){
-                PropertyValue bean=new PropertyValue();
-                int ptid=rs.getInt("ptid");
-                Product product=new ProductDAO().get(pid);
-                Property property=new PropertyDAO().get(ptid);
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, pid);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                PropertyValue bean = new PropertyValue();
+                int ptid = rs.getInt("ptid");
+                Product product = new ProductDAO().get(pid);
+                Property property = new PropertyDAO().get(ptid);
                 bean.setId(rs.getInt("id"));
                 bean.setProperty(property);
                 bean.setProduct(product);

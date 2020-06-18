@@ -70,6 +70,28 @@ public class PropertyDAO {
         return bean;
     }
 
+    public Property get(String name, int cid) {
+        Property bean =null;
+        String sql = "select * from Property where name = ? and cid = ?";
+        try (Connection c = DBUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setInt(2, cid);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int id = rs.getInt("id");
+                bean = new Property();
+                bean.setName(name);
+                Category category = new CategoryDAO().get(cid);
+                bean.setCategory(category);
+                bean.setId(id);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return bean;
+    }
+
     public int getTotal(int cid) {
         int total = 0;
         try (Connection c = DBUtil.getConnection();

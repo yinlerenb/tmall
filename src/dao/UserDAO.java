@@ -131,10 +131,12 @@ public class UserDAO {
         }
         return bean;
     }
+
     public boolean isExist(String name){
         User user=get(name);
         return user!=null;
     }
+
     public User get(String name){
         User bean=null;
         String sql="select * from User where name=?";

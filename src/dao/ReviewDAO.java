@@ -11,6 +11,23 @@ import java.sql.*;
 import java.util.List;
 
 public class ReviewDAO {
+    public int getTotal() {
+        int total = 0;
+        try (Connection c = DBUtil.getConnection(); Statement s = c.createStatement();) {
+
+            String sql = "select count(*) from Review";
+
+            ResultSet rs = s.executeQuery(sql);
+            while (rs.next()) {
+                total = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+        return total;
+    }
+
     public void add(Review bean) {
         String sql = "insert into Review values(null,?,?,?)";
         try (Connection c = DBUtil.getConnection();
@@ -124,5 +141,21 @@ public class ReviewDAO {
 
     public List<Review> list(int pid) {
         return list(pid, 0, Short.MAX_VALUE);
+    }
+
+    public boolean isExist(String content, int pid) {
+        String sql = "select * from Review where content = ? and pid = ?";
+        try (Connection c = DBUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, content);
+            ps.setInt(2, pid);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

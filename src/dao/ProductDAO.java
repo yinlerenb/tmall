@@ -2,28 +2,16 @@ package dao;
 
 import bean.Category;
 import bean.Product;
+import bean.ProductImage;
 import util.DBUtil;
 import util.DateUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class ProductDAO {
-    public int getTotal() {
-        int total = 0;
-        try (Connection c = DBUtil.getConnection();
-             Statement s = c.createStatement()) {
-            String sql = "select count(*) from Product";
-            ResultSet rs = s.executeQuery(sql);
-            while (rs.next()) {
-                total = rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return total;
-    }
 
     public void add(Product bean) {
         String sql = "insert into Product values(null,?,?,?,?,?,?,?)";
@@ -128,11 +116,11 @@ public class ProductDAO {
         return list(0, Integer.MAX_VALUE);
     }
 
-    public int getTotal(int cid){
+    public int getTotal(int cid) {
         int total = 0;
         try (Connection c = DBUtil.getConnection();
              Statement s = c.createStatement()) {
-            String sql = "select count(*) from Product where cid="+cid;
+            String sql = "select count(*) from Product where cid=" + cid;
             ResultSet rs = s.executeQuery(sql);
             while (rs.next()) {
                 total = rs.getInt(1);
@@ -144,28 +132,138 @@ public class ProductDAO {
     }
 
     public List<Product> list(int cid) {
-        List<Product> beans = new ArrayList<>();
-        String sql = "select * from Product where cid=? order by id desc";
+        return list(cid, 0, Short.MAX_VALUE);
+    }
+
+    public List<Product> list(int cid, int start, int count) {
+        List<Product> beans = new ArrayList<Product>();
+        Category category = new CategoryDAO().get(cid);
+        String sql = "select * from Product where cid = ? order by id desc limit ?,? ";
+
         try (Connection c = DBUtil.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, cid);
+            ps.setInt(2, start);
+            ps.setInt(3, count);
+
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
                 Product bean = new Product();
-                bean.setId(rs.getInt(1));
-                bean.setName(rs.getString(2));
-                bean.setSubTitle(rs.getString(3));
-                bean.setOriginalPrice(rs.getFloat(4));
-                bean.setPromotePrice(rs.getFloat(5));
-                bean.setStock(rs.getInt(6));
-                bean.setCategory(new CategoryDAO().get(cid));
-                bean.setCreateDate(DateUtil.t2d(rs.getTimestamp(8)));
+                int id = rs.getInt(1);
+                String name = rs.getString("name");
+                String subTitle = rs.getString("subTitle");
+                float originalPrice = rs.getFloat("originalPrice");
+                float promotePrice = rs.getFloat("promotePrice");
+                int stock = rs.getInt("stock");
+                Date createDate = DateUtil.t2d(rs.getTimestamp("createDate"));
+
+                bean.setName(name);
+                bean.setSubTitle(subTitle);
+                bean.setOriginalPrice(originalPrice);
+                bean.setPromotePrice(promotePrice);
+                bean.setStock(stock);
+                bean.setCreateDate(createDate);
+                bean.setId(id);
+                bean.setCategory(category);
+                setFirstProductImage(bean);
                 beans.add(bean);
             }
         } catch (SQLException e) {
+
             e.printStackTrace();
         }
         return beans;
     }
 
+    public void fill(List<Category> cs) {
+        for (Category c : cs)
+            fill(c);
+    }
+
+    public void fill(Category c) {
+        List<Product> ps = this.list(c.getId());
+        c.setProducts(ps);
+    }
+
+    public void fillByRow(List<Category> cs) {
+        int productNumberEachRow = 8;
+        for (Category c : cs) {
+            List<Product> products = c.getProducts();
+            List<List<Product>> productsByRow = new ArrayList<>();
+            for (int i = 0; i < products.size(); i += productNumberEachRow) {
+                int size = i + productNumberEachRow;
+                size = Math.min(size, products.size());
+                List<Product> productsOfEachRow = products.subList(i, size);
+                productsByRow.add(productsOfEachRow);
+            }
+            c.setProductsByRow(productsByRow);
+        }
+    }
+
+    public void setFirstProductImage(Product p) {
+        List<ProductImage> pis = new ProductImageDAO().list(p, ProductImageDAO.type_single);
+        if (!pis.isEmpty())
+            p.setFirstProductImage(pis.get(0));
+    }
+
+    public void setSaleAndReviewNumber(Product p) {
+        int saleCount = new OrderItemDAO().getSaleCount(p.getId());
+        p.setSaleCount(saleCount);
+
+        int reviewCount = new ReviewDAO().getCount(p.getId());
+        p.setReviewCount(reviewCount);
+
+    }
+
+    public void setSaleAndReviewNumber(List<Product> products) {
+        for (Product p : products) {
+            setSaleAndReviewNumber(p);
+        }
+    }
+
+    public List<Product> search(String keyword, int start, int count) {
+        List<Product> beans = new ArrayList<Product>();
+
+        if (null == keyword || 0 == keyword.trim().length())
+            return beans;
+        String sql = "select * from Product where name like ? limit ?,? ";
+
+        try (Connection c = DBUtil.getConnection(); PreparedStatement ps = c.prepareStatement(sql);) {
+            ps.setString(1, "%" + keyword.trim() + "%");
+            ps.setInt(2, start);
+            ps.setInt(3, count);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Product bean = new Product();
+                int id = rs.getInt(1);
+                int cid = rs.getInt("cid");
+                String name = rs.getString("name");
+                String subTitle = rs.getString("subTitle");
+                float originalPrice = rs.getFloat("originalPrice");
+                float promotePrice = rs.getFloat("promotePrice");
+                int stock = rs.getInt("stock");
+                Date createDate = DateUtil.t2d(rs.getTimestamp("createDate"));
+
+                bean.setName(name);
+                bean.setSubTitle(subTitle);
+                bean.setOriginalPrice(originalPrice);
+                bean.setPromotePrice(promotePrice);
+                bean.setStock(stock);
+                bean.setCreateDate(createDate);
+                bean.setId(id);
+
+                Category category = new CategoryDAO().get(cid);
+                bean.setCategory(category);
+                setFirstProductImage(bean);
+                beans.add(bean);
+            }
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+        return beans;
+    }
 }

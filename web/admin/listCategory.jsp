@@ -22,7 +22,9 @@
         });
     });
 </script>
+
 <title>分类管理</title>
+
 <div class="workingArea">
     <h1 class="label label-info">分类管理</h1>
     <br>
@@ -32,12 +34,12 @@
         <table class="table table-striped table-bordered table-hover table-condensed">
             <thead>
                 <tr class="success">
-                    <td>ID</td>
-                    <td>分类名称</td>
-                    <td>属性管理</td>
-                    <td>产品管理</td>
-                    <td>编辑</td>
-                    <td>删除</td>
+                    <th>ID</th>
+                    <th>分类名称</th>
+                    <th>属性管理</th>
+                    <th>产品管理</th>
+                    <th>编辑</th>
+                    <th>删除</th>
                 </tr>
             </thead>
             <tbody>

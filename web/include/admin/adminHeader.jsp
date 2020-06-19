@@ -23,7 +23,7 @@ pageEncoding表示当前jsp上的中文文字会使用utf-8进行编码
     <script>
         function checkEmpty(id, name) {
             let value = $('#' + id).val();
-            if (value.length === 0) {
+            if (value.length == 0) {
                 alert(name + "");
                 $("#" + id)[0].focus();
                 return false;

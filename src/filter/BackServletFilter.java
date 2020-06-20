@@ -17,6 +17,7 @@ public class BackServletFilter implements Filter {
         HttpServletResponse response=(HttpServletResponse) resp;
         HttpServletRequest request=(HttpServletRequest) req;
         String contextPath=request.getServletContext().getContextPath();
+        //截取url的最后部分
         String uri=request.getRequestURI();
         uri= StringUtils.remove(uri,contextPath);
         if (uri.startsWith("/admin_")){
@@ -25,6 +26,7 @@ public class BackServletFilter implements Filter {
             request.setAttribute("method",method);
             return;
         }
+        //请求放行
         chain.doFilter(request,response);
     }
 

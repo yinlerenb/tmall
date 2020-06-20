@@ -40,6 +40,7 @@ public abstract class BaseBackServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
+            //分页
             int start=0;
             int count=5;
             try {
@@ -49,9 +50,13 @@ public abstract class BaseBackServlet extends HttpServlet {
                 e.printStackTrace();
             }
             Page page=new Page(start,count);
+
+            //借助反射调用对应的方法
             String method=(String) req.getAttribute("method");
             Method m=this.getClass().getMethod(method,HttpServletRequest.class,HttpServletResponse.class, Page.class);
             String redirect=m.invoke(this,req,resp,page).toString();
+
+            //根据方法的返回值
             if(redirect.startsWith("@")){
                 resp.sendRedirect(redirect.substring(1));
             }else if(redirect.startsWith("%")){

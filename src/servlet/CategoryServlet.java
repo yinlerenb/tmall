@@ -17,6 +17,12 @@ import java.util.Map;
 @WebServlet(name = "CategoryServlet")
 public class CategoryServlet extends BaseBackServlet {
 
+    // 之前的做法：通过不同的urI访问不同的servlet类执行类中对应的service方法
+    // 弊端如果业务的CRUD很多衍生的servlet类就会非常多代码会显得随肿
+    // 优化做法：所有和category相关的功能全部放在同一个servlet中
+    // 根据传递过来的不同urI 访问servlet类中的不同方法
+    // new CategoryServlet().service()
+
     @Override
     public String add(HttpServletRequest request, HttpServletResponse response, Page page) {
         Map<String, String> params = new HashMap<>();
@@ -36,6 +42,7 @@ public class CategoryServlet extends BaseBackServlet {
                         fos.write(b, 0, length);
                     }
                     fos.flush();
+                    //通过如下代码，把文件保存为jpg格式
                     BufferedImage img = ImageUtil.change2jpg(file);
                     ImageIO.write(img, "jpg", file);
                 } catch (IOException e) {
@@ -85,6 +92,7 @@ public class CategoryServlet extends BaseBackServlet {
                         fos.write(b, 0, length);
                     }
                     fos.flush();
+                    //通过如下代码，把文件保存为jpg格式
                     BufferedImage img = ImageUtil.change2jpg(file);
                     ImageIO.write(img, "jpg", file);
                 } catch (IOException e) {

@@ -20,12 +20,11 @@ public class ForeServletFilter implements Filter {
     }
 
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws ServletException, IOException {
-        //对req和res做类型转换
+        //对req和resp做类型转换
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) resp;
         String contextPath = request.getServletContext().getContextPath();
         //获取当前项目的url部分
-        System.out.println("contextPath值为：" + contextPath);
         request.getServletContext().setAttribute("contextPath", contextPath);
         //从session中获取已经存储的用户信息
         User user = (User) request.getSession().getAttribute("user");
@@ -51,7 +50,7 @@ public class ForeServletFilter implements Filter {
         //如果uri以/fore开头并且不以/foreServlet开头
         if (uri.startsWith("/fore") && !uri.startsWith("/foreServlet")) {
             //去除method部分的register字符串
-            String method = StringUtils.substringAfterLast(uri, " / fore ");
+            String method = StringUtils.substringAfterLast(uri, "/fore");
             request.setAttribute("method", method);
             //截取uri中的方法名称并且将方法名称传给转发之后的servlet
             req.getRequestDispatcher("/foreServlet").forward(request, response);

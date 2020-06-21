@@ -30,7 +30,7 @@ public class ForeServlet extends BaseForeServlet {
         String name = request.getParameter("name");
         String password = request.getParameter("password");
         //防止代码注入
-        // <script>alert(111)<script/>
+        // <script>alert(111)</script>
         name = HtmlUtils.htmlEscape(name);
         System.out.println(name);
         //判断注册的用户是否存在

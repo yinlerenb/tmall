@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBUtil {
-    private static String url="jdbc:mysql://127.0.0.1:3306/cart?characterEncoding=UTF-8";
+    private static String url="jdbc:mysql://127.0.0.1:3306/tmall?characterEncoding=UTF-8";
     private static String username = "root";
     private static String password = "123456";
     private static String Driver = "com.mysql.jdbc.Driver";

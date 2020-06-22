@@ -77,7 +77,7 @@ public class ForeServlet extends BaseForeServlet {
         Product p = productDAO.get(pid);
         //获取的是产品的单个图片集合
         List<ProductImage> productSingleImages = productImageDAO.list(p, ProductImageDAO.type_single);
-        //获取产品详情结合
+        //获取产品详情集合
         List<ProductImage> productDetailImages = productImageDAO.list(p, ProductImageDAO.type_detail);
         //将获取到的图片集合存入到对象p中
         p.setProductSingleImages(productSingleImages);
@@ -231,6 +231,7 @@ public class ForeServlet extends BaseForeServlet {
     }
 
     public String cart(HttpServletRequest request, HttpServletResponse response, Page page) {
+        //通过session获取对应的用户对象
         User user = (User) request.getSession().getAttribute("user");
         List<OrderItem> ois = orderItemDAO.listByUser(user.getId());
         request.setAttribute("ois", ois);

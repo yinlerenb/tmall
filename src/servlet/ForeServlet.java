@@ -163,14 +163,23 @@ public class ForeServlet extends BaseForeServlet {
     }
 
     public String buyone(HttpServletRequest request, HttpServletResponse response, Page page) {
+        //获取商品id的参数以及商品数量参数num
         int pid = Integer.parseInt(request.getParameter(" pid "));
         int num = Integer.parseInt(request.getParameter(" num "));
+        //根据pid获取产品对象p
         Product p = productDAO.get(pid);
+        //初始化订单项id
         int oiid = 0;
+        //从 session中获取用户对象
         User user = (User) request.getSession().getAttribute("user");
         boolean found = false;
+        //新增订单项
+        // 如果已经存在这个商品对应的 orderitem 并且还没有生成订单(在购物车中)
+        // 就应该在对应的 orderitem中调整数量
+
+        //基于用中对象user 查没有生成订单的订单项集合
         List<OrderItem> ois = orderItemDAO.listByUser(user.getId());
-        for (OrderItem oi : ois) {
+        for (OrderItem oi : ois) { //遍历
             if (oi.getProduct().getId() == p.getId()) {
                 oi.setNumber(oi.getNumber() + num);
                 orderItemDAO.update(oi);
@@ -179,12 +188,17 @@ public class ForeServlet extends BaseForeServlet {
                 break;
             }
         }
+        //如果不存在对应的Orderitem 那么就新增一个订单项 orderitem
         if (!found) {
+            //生成新的订单项
             OrderItem oi = new OrderItem();
+            //设置订单项的数量 用户和对应商品
             oi.setUser(user);
             oi.setNumber(num);
             oi.setProduct(p);
+            //将数据插入到数据库中
             orderItemDAO.add(oi);
+            //获取到该订单项的id
             oiid = oi.getId();
         }
         return "@forebuy?oiid=" + oiid;
@@ -197,18 +211,24 @@ public class ForeServlet extends BaseForeServlet {
         for (String strid : oiids) {
             int oiid = Integer.parseInt(strid);
             OrderItem oi = orderItemDAO.get(oiid);
+            //计算订单项的商品总价
             total += oi.getProduct().getPromotePrice() * oi.getNumber();
             ois.add(oi);
         }
+        //把这个订单项的集合存放在session
         request.getSession().setAttribute("ois", ois);
+        //把商品总价存放在request中
         request.setAttribute("total", total);
         return "buy.jsp";
     }
 
     public String addCart(HttpServletRequest request, HttpServletResponse response, Page page) {
+        //获取对应参数
         int pid = Integer.parseInt(request.getParameter("pid"));
+        //通过获取到的参数获取对应的商品对象
         Product p = productDAO.get(pid);
         int num = Integer.parseInt(request.getParameter("num"));
+        //从session中获取对应的用户对象
         User user = (User) request.getSession().getAttribute("user");
         boolean found = false;
         List<OrderItem> ois = orderItemDAO.listByUser(user.getId());
@@ -227,14 +247,17 @@ public class ForeServlet extends BaseForeServlet {
             oi.setProduct(p);
             orderItemDAO.add(oi);
         }
+        //向response响应中写入success字符串 返回给页面的ajax的响应函数
         return "%success";
     }
 
     public String cart(HttpServletRequest request, HttpServletResponse response, Page page) {
         //通过session获取对应的用户对象
         User user = (User) request.getSession().getAttribute("user");
+        //通过用户对象获取属于该用户的orderItem集合
         List<OrderItem> ois = orderItemDAO.listByUser(user.getId());
         request.setAttribute("ois", ois);
+        //页面通过转发跳转到cart.jsp
         return "cart.jsp";
     }
 
@@ -311,9 +334,13 @@ public class ForeServlet extends BaseForeServlet {
 
     public String bought(HttpServletRequest request, HttpServletResponse response, Page page) {
         User user = (User) request.getSession().getAttribute("user");
+        //查询user所有状态不是delete的订单的集合
         List<Order> os = orderDAO.list(user.getId(), OrderDAO.delete);
+        //为这些订单填充订单项
         orderItemDAO.fill(os);
+        //把订单集合存放在request对象中
         request.setAttribute("os", os);
+        //转发到 bought.jsp界面
         return "bought.jsp";
     }
 
@@ -343,12 +370,19 @@ public class ForeServlet extends BaseForeServlet {
     }
 
     public String review(HttpServletRequest request, HttpServletResponse response, Page page) {
+        //获取参数
         int oid = Integer.parseInt(request.getParameter("oid"));
+        //根据oid获取订单对象
         Order o = orderDAO.get(oid);
+        //为订单对象填充订单项
         orderItemDAO.fill(o);
+        //获取订单中第一个商品的对象
         Product p = o.getOrderItems().get(0).getProduct();
+        //获取这个产品的评价集合
         List<Review> reviews = reviewDAO.list(p.getId());
+        //为产品设置属性
         productDAO.setSaleAndReviewNumber(p);
+        //将获取到的数据存放 request上
         request.setAttribute("p", p);
         request.setAttribute("o", o);
         request.setAttribute("reviews", reviews);
@@ -362,8 +396,10 @@ public class ForeServlet extends BaseForeServlet {
         orderDAO.update(o);
         int pid = Integer.parseInt(request.getParameter("pid"));
         Product p = productDAO.get(pid);
+        //获取评论内容
         String content = request.getParameter("content");
         content = HtmlUtils.htmlEscape(content);
+        //获取用户
         User user = (User) request.getSession().getAttribute("user");
         Review review = new Review();
         review.setContent(content);

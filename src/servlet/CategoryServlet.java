@@ -1,6 +1,7 @@
 package servlet;
 
 import bean.Category;
+import org.apache.commons.fileupload.FileItem;
 import util.ImageUtil;
 import util.Page;
 
@@ -31,8 +32,8 @@ public class CategoryServlet extends BaseBackServlet {
         Category c = new Category();
         c.setName(name);
         categoryDAO.add(c);
-        File imageFloder = new File(request.getSession().getServletContext().getRealPath("img/category"));
-        File file = new File(imageFloder, c.getId() + ",jpg");
+        File imageFolder = new File(request.getSession().getServletContext().getRealPath("img/category"));
+        File file = new File(imageFolder, c.getId() + ".jpg");
         try {
             if (null != is && 0 != is.available()) {
                 try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -42,7 +43,7 @@ public class CategoryServlet extends BaseBackServlet {
                         fos.write(b, 0, length);
                     }
                     fos.flush();
-                    //通过如下代码，把文件保存为jpg格式
+                    //将img转为jpg格式
                     BufferedImage img = ImageUtil.change2jpg(file);
                     ImageIO.write(img, "jpg", file);
                 } catch (IOException e) {
@@ -67,7 +68,7 @@ public class CategoryServlet extends BaseBackServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         Category c = categoryDAO.get(id);
         request.setAttribute("c", c);
-        return "admin?editCategory.jsp";
+        return "admin/editCategory.jsp";
     }
 
     @Override
